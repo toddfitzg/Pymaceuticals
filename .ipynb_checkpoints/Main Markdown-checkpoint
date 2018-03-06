@@ -1,0 +1,279 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Observed Trends\n",
+    "\n",
+    "1: Only Capomulin reduced tumor volume over the course of the study\n",
+    "\n",
+    "2: All Drugs saw an increase in Metastatic Sites but Capomulin was increasing at the slowest rate.\n",
+    "\n",
+    "3: Survival Rate over Time decreases for all treatments but it is significantly higher for Capomulin."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#dependencies\n",
+    "import matplotlib.pyplot as plt\n",
+    "import pandas as pd"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#import csv data \n",
+    "\n",
+    "trial_dat = pd.read_csv(\"clinicaltrial_data.csv\")\n",
+    "drug_dat = pd.read_csv(\"mouse_drug_data.csv\")\n",
+    "trial_dat.head()\n",
+    "#drug_dat.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#merger data on mouse ID\n",
+    "#school_data_complete = pd.merge(student_data, school_data, how=\"left\", on=[\"school_name\", \"school_name\"])\n",
+    "drug_data_complete = pd.merge(trial_dat, drug_dat, how=\"left\", on=\"Mouse ID\")\n",
+    "drug_data_complete.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#filter data for four treatments we want to look at \n",
+    "\n",
+    "treatment_data = drug_data_complete[drug_data_complete[\"Drug\"].isin([\"Capomulin\", \"Infubinol\", \"Ketapril\", \"Placebo\"])]\n",
+    "treatment_data.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#international_duration = pd.DataFrame(grouped_international_data[\"duration (seconds)\"].sum())\n",
+    "\n",
+    "# test_data = treatment_data.iloc[:,[1,2,4]]\n",
+    "\n",
+    "# test_data.set_index(\"Timepoint\", inplace=True)\n",
+    "# test_data.head()\n",
+    "#tumor_volume = pd.DataFrame(test_data[\"Tumor Volume (mm3)\"].mean())\n",
+    "\n",
+    "capomulin_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Capomulin\"]\n",
+    "capomulin_vol_mean = capomulin_data.groupby('Timepoint', as_index=False)[\"Tumor Volume (mm3)\"].mean()\n",
+    "#rename columns\n",
+    "capomulin_vol_mean = capomulin_vol_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Tumor Volume (mm3)\":\"Capomulin\"})\n",
+    "\n",
+    "infubinol_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Infubinol\"]\n",
+    "infubinol_vol_mean = infubinol_data.groupby('Timepoint', as_index=False)[\"Tumor Volume (mm3)\"].mean()\n",
+    "infubinol_vol_mean = infubinol_vol_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Tumor Volume (mm3)\":\"Infubinol\"})\n",
+    "\n",
+    "ketapril_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Ketapril\"]\n",
+    "ketapril_vol_mean = ketapril_data.groupby('Timepoint', as_index=False)[\"Tumor Volume (mm3)\"].mean()\n",
+    "ketapril_vol_mean = ketapril_vol_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Tumor Volume (mm3)\":\"Ketapril\"})\n",
+    "\n",
+    "placebo_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Placebo\"]\n",
+    "placebo_vol_mean = placebo_data.groupby('Timepoint', as_index=False)[\"Tumor Volume (mm3)\"].mean()\n",
+    "placebo_vol_mean = placebo_vol_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Tumor Volume (mm3)\":\"Placebo\"})\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#assemble df with all drugs\n",
+    "\n",
+    "tumor_volume_complete = pd.merge(capomulin_vol_mean, infubinol_vol_mean, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_volume_complete = pd.merge(tumor_volume_complete, ketapril_vol_mean, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_volume_complete = pd.merge(tumor_volume_complete, placebo_vol_mean, how=\"left\", on=\"Timepoint\")\n",
+    "\n",
+    "tumor_volume_complete.head()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#plot tumor respone to treatment\n",
+    "\n",
+    "#plt.scatter(tumor_volume_complete[\"Timepoint\"], tumor_volume_complete[\"Capomulin\"], '-o')\n",
+    "Capomulin, = plt.plot(tumor_volume_complete[\"Timepoint\"], tumor_volume_complete[\"Capomulin\"], '.r--', label=\"Capomulin\")\n",
+    "Infubinol, = plt.plot(tumor_volume_complete[\"Timepoint\"], tumor_volume_complete[\"Infubinol\"], 'sg-.')\n",
+    "Ketapril, = plt.plot(tumor_volume_complete[\"Timepoint\"], tumor_volume_complete[\"Ketapril\"], 'Dc:')\n",
+    "Placebo, = plt.plot(tumor_volume_complete[\"Timepoint\"], tumor_volume_complete[\"Placebo\"], '^b-')\n",
+    "\n",
+    "plt.xlabel('Time(Days)')\n",
+    "plt.ylabel('Tumor Volume (mm3)')\n",
+    "plt.legend(handles=[Capomulin, Infubinol, Ketapril, Placebo], loc=\"best\")\n",
+    "plt.title(\"Tumor Response to Treatment\")\n",
+    "plt.grid(True)\n",
+    "plt.show()\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# get data and plot for metastatic spreads\n",
+    "\n",
+    "capomulin_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Capomulin\"]\n",
+    "capomulin_spread_mean = capomulin_data.groupby('Timepoint', as_index=False)[\"Metastatic Sites\"].mean()\n",
+    "#rename columns\n",
+    "capomulin_spread_mean = capomulin_spread_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Metastatic Sites\":\"Capomulin\"})\n",
+    "\n",
+    "infubinol_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Infubinol\"]\n",
+    "infubinol_spread_mean = infubinol_data.groupby('Timepoint', as_index=False)[\"Metastatic Sites\"].mean()\n",
+    "infubinol_spread_mean = infubinol_spread_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Metastatic Sites\":\"Infubinol\"})\n",
+    "\n",
+    "ketapril_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Ketapril\"]\n",
+    "ketapril_spread_mean = ketapril_data.groupby('Timepoint', as_index=False)[\"Metastatic Sites\"].mean()\n",
+    "ketapril_spread_mean = ketapril_spread_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Metastatic Sites\":\"Ketapril\"})\n",
+    "\n",
+    "placebo_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Placebo\"]\n",
+    "placebo_spread_mean = placebo_data.groupby('Timepoint', as_index=False)[\"Metastatic Sites\"].mean()\n",
+    "placebo_spread_mean = placebo_spread_mean.rename(columns={\"Timepoint\":\"Timepoint\", \"Metastatic Sites\":\"Placebo\"})"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "tumor_spread_complete = pd.merge(capomulin_spread_mean, infubinol_spread_mean, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_spread_complete = pd.merge(tumor_spread_complete, ketapril_spread_mean, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_spread_complete = pd.merge(tumor_spread_complete, placebo_spread_mean, how=\"left\", on=\"Timepoint\")\n",
+    "\n",
+    "tumor_spread_complete.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#plot data\n",
+    "Capomulin, = plt.plot(tumor_spread_complete[\"Timepoint\"], tumor_spread_complete[\"Capomulin\"], '.r--', label=\"Capomulin\")\n",
+    "Infubinol, = plt.plot(tumor_spread_complete[\"Timepoint\"], tumor_spread_complete[\"Infubinol\"], 'sg-.')\n",
+    "Ketapril, = plt.plot(tumor_spread_complete[\"Timepoint\"], tumor_spread_complete[\"Ketapril\"], 'Dc:')\n",
+    "Placebo, = plt.plot(tumor_spread_complete[\"Timepoint\"], tumor_spread_complete[\"Placebo\"], '^b-')\n",
+    "\n",
+    "plt.xlabel('Time(Days)')\n",
+    "plt.ylabel('Met. Sites')\n",
+    "plt.legend(handles=[Capomulin, Infubinol, Ketapril, Placebo], loc=\"best\")\n",
+    "plt.title(\"Metastatic Spread During Treatment\")\n",
+    "plt.grid(True)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#get survival rates\n",
+    "\n",
+    "capomulin_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Capomulin\"]\n",
+    "capomulin_survival = capomulin_data.groupby('Timepoint', as_index=False)[\"Mouse ID\"].count()\n",
+    "#rename columns\n",
+    "capomulin_survival = capomulin_survival.rename(columns={\"Timepoint\":\"Timepoint\", \"Mouse ID\":\"Capomulin\"})\n",
+    "\n",
+    "infubinol_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Infubinol\"]\n",
+    "infubinol_survival = infubinol_data.groupby('Timepoint', as_index=False)[\"Mouse ID\"].count()\n",
+    "infubinol_survival = infubinol_survival.rename(columns={\"Timepoint\":\"Timepoint\", \"Mouse ID\":\"Infubinol\"})\n",
+    "\n",
+    "ketapril_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Ketapril\"]\n",
+    "ketapril_survival = ketapril_data.groupby('Timepoint', as_index=False)[\"Mouse ID\"].count()\n",
+    "ketapril_survival = ketapril_survival.rename(columns={\"Timepoint\":\"Timepoint\", \"Mouse ID\":\"Ketapril\"})\n",
+    "\n",
+    "placebo_data = treatment_data.loc[treatment_data[\"Drug\"] == \"Placebo\"]\n",
+    "placebo_survival = placebo_data.groupby('Timepoint', as_index=False)[\"Mouse ID\"].count()\n",
+    "placebo_survival = placebo_survival.rename(columns={\"Timepoint\":\"Timepoint\", \"Mouse ID\":\"Placebo\"})"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "tumor_survival = pd.merge(capomulin_survival, infubinol_survival, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_survival = pd.merge(tumor_survival, ketapril_survival, how=\"left\", on=\"Timepoint\")\n",
+    "tumor_survival = pd.merge(tumor_survival, placebo_survival, how=\"left\", on=\"Timepoint\")\n",
+    "\n",
+    "tumor_survival.head()\n",
+    "\n",
+    "#plot data\n",
+    "Capomulin, = plt.plot(tumor_survival[\"Timepoint\"], tumor_survival[\"Capomulin\"], '.r--', label=\"Capomulin\")\n",
+    "Infubinol, = plt.plot(tumor_spread_complete[\"Timepoint\"], tumor_survival[\"Infubinol\"], 'sg-.')\n",
+    "Ketapril, = plt.plot(tumor_survival[\"Timepoint\"], tumor_survival[\"Ketapril\"], 'Dc:')\n",
+    "Placebo, = plt.plot(tumor_survival[\"Timepoint\"], tumor_survival[\"Placebo\"], '^b-')\n",
+    "\n",
+    "plt.xlabel('Time(Days)')\n",
+    "plt.ylabel('Survival Rate')\n",
+    "plt.legend(handles=[Capomulin, Infubinol, Ketapril, Placebo], loc=\"best\")\n",
+    "plt.title(\"Survival Rate over TIme\")\n",
+    "plt.grid(True)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
